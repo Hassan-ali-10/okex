@@ -14,6 +14,6 @@ func SetRouters() {
 	
 	  r := mux.NewRouter()
 	  r.HandleFunc("/A", api.Home).Methods("GET")
-	  r.HandleFunc("/executeOrders", api.ExecuteOrders).Methods("GET")
+	  r.HandleFunc("/executeOrders", api.ExecuteOrdersPostRequest).Methods("GET")
       http.ListenAndServe(":"+config.PORT, r)
 }

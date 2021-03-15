@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"context"
 	//"log"
-	//"fmt"
+	"fmt"
 	"net/http"
 	//"time"
 	//"go.mongodb.org/mongo-driver/mongo"
@@ -12,8 +12,8 @@ import (
 	 connectionhelper "okex/db"
 	 //config "okex/config"
 	 //constants "okex/constants"
-	 helpers "okex/common"
-	"io/ioutil"
+	 //helpers "okex/common"
+	//"io/ioutil"
 	"sync"
 )
 var (
@@ -35,7 +35,7 @@ func ExecuteOrdersPostRequest(response http.ResponseWriter, request *http.Reques
 	var payload map[string]interface{}
 	//Decode Incoming Payload By Mapping it on payload i.e. Struct Instance in Models
 	_ = json.NewDecoder(request.Body).Decode(&payload)
-	go helpers.PickParentsAndMakeChilds(payload, orders)
+	//go helpers.PickParentsAndMakeChilds(payload, orders)
 	fmt.Println(<-orders) // Read the value from unbuffered channel
 	wg.Wait()
 	close(orders) // Closes the channel
