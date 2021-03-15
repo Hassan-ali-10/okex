@@ -5,6 +5,7 @@ import (
     "github.com/gorilla/mux"
     api "okex/routes/api"
     config "okex/config"
+    
 
 	
 )
@@ -12,6 +13,7 @@ import (
 func SetRouters() {
 	
 	  r := mux.NewRouter()
-	  r.HandleFunc("/executeOrders", api.CreateBook).Methods("POST")
+	  r.HandleFunc("/A", api.Home).Methods("GET")
+	  r.HandleFunc("/executeOrders", api.ExecuteOrders).Methods("GET")
       http.ListenAndServe(":"+config.PORT, r)
 }

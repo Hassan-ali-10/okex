@@ -39,3 +39,14 @@ func GetMongoClient() (*mongo.Client, error){
     fmt.Println("sagfjkagjkasg")
     return clientInstance, clientInstanceError
 }
+func GetMongoDbCollection(CollectionName string) (*mongo.Collection, error) {
+    client, err := GetMongoClient()
+
+    if err != nil {
+        return nil, err
+    }
+
+    collection := client.Database(config.HOMEDB).Collection(CollectionName)
+
+    return collection, nil
+}

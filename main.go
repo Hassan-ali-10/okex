@@ -3,15 +3,15 @@ package main
 import (
 	
 	routes "okex/routes"
-	connectionhelper "okex/db"
+	
 	// "fmt"
-	// config "okex/config"
+     crons "okex/crons"
 	
 )
 
 func main() {
-	//db.ConnectMongo()
-	connectionhelper.GetMongoClient()
+	
 	routes.SetRouters()
+	crons.AllCrons();
 	
 }
