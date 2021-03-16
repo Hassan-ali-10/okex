@@ -12,7 +12,7 @@ import (
 	 connectionhelper "okex/db"
 	 //config "okex/config"
 	 //constants "okex/constants"
-	 //helpers "okex/common"
+	 helpers "okex/common"
 	//"io/ioutil"
 	"sync"
 )
@@ -25,61 +25,88 @@ var (
 	
 func Home(response http.ResponseWriter, request *http.Request) {
 response.Header().Set("content-type", "application/json")
-json.NewEncoder(response).Encode("WELCOME HOME")
-}
-func ExecuteOrdersPostRequest(response http.ResponseWriter, request *http.Request) {
-	//collectionName:="employees" // for office
-	response.Header().Set("content-type", "application/json")
-	orders := make(chan bool) // Declare a unbuffered channel
-	wg.Add(1)
-	var payload map[string]interface{}
-	//Decode Incoming Payload By Mapping it on payload i.e. Struct Instance in Models
-	_ = json.NewDecoder(request.Body).Decode(&payload)
-	//go helpers.PickParentsAndMakeChilds(payload, orders)
-	fmt.Println(<-orders) // Read the value from unbuffered channel
-	wg.Wait()
-	close(orders) // Closes the channel
-	 defaultJSON := bson.M{
-			"success": true,
-			"message": "Creating orders",
-		}
-		json.NewEncoder(response).Encode(defaultJSON)
-		return
-
-	collectionName:="hssn1sss"  // for home
+//Perform Find operation & validate against the error.
+collectionName:="employees2" // for office	
+	//collectionName:="hssn1sss"  // for home
 	//Define filter query for fetching specific document from collection
 	filter := bson.D{{}} //bson.D{{}} specifies 'all documents'
 	var results []bson.M
 	//Get MongoDB collection using connectionhelper.
 	collection, err := connectionhelper.GetMongoDbCollection(collectionName)
 	if err != nil {
-		json.NewEncoder(response).Encode(err)
+		defaultJSON := bson.M{
+			"success": false,
+			"message": err,
+		}
+		json.NewEncoder(response).Encode(defaultJSON)
 		return
 	}
-	  
 
-	
-	//Perform Find operation & validate against the error.
 	cur, findError := collection.Find(context.TODO(), filter)
 	if findError != nil {
-		json.NewEncoder(response).Encode(findError)
+			defaultJSON := bson.M{
+			"success": false,
+			"message": findError,
+		}
+		json.NewEncoder(response).Encode(defaultJSON)
 		return
 	}
 	//Map result to slice
 	cur.All(context.TODO(), &results)
-	// once exhausted, close the cursor
+	// once exhausted, close the cursor  it will free mongodb server resource ...
 	cur.Close(context.TODO())
 	// return response
 	// fmt.Println(results)
 	if len(results) == 0 {
 	    defaultJSON := bson.M{
 			"success": true,
-			"message": "Creating orders",
+			"message": "Nothing Found",
 		}
 		json.NewEncoder(response).Encode(defaultJSON)
 	} else {
 		json.NewEncoder(response).Encode(results)
 	}
+//json.NewEncoder(response).Encode("WELCOME HOME")
+}
+func ExecuteOrdersPostRequest(response http.ResponseWriter, request *http.Request) {
+	
+	// validate headers ....
+
+ 	// ok := request.Header.Get("rulesRequest")
+ 	// fmt.Println("353vsvc")
+ 	// fmt.Println(ok)
+	// if !ok  {  // this request can not be identified please return...
+	//        result := bson.M{
+	// 		"success": false,
+	// 		"message": "Invalid Request",
+	// 	}
+	// 	json.NewEncoder(response).Encode(result)
+	// 	return;
+ //    }
+    
+	response.Header().Set("content-type", "application/json")
+	var wg sync.WaitGroup
+	orders := make(chan bool)
+	
+	 // Declare a unbuffered channel
+	wg.Add(1)
+	var payload map[string]interface{}
+	//Decode Incoming Payload By Mapping it on payload i.e. Struct Instance in Models
+	_ = json.NewDecoder(request.Body).Decode(&payload)
+	go helpers.PickParentsAndMakeChilds(payload, orders,&wg)
+	go func() {
+		fmt.Println("channel is closed")
+		wg.Wait()	// this blocks the goroutine until WaitGroup counter is zero
+		close(orders)    // Channels need to be closed,
+	}()    // This calls itself
+	 defaultJSON := bson.M{
+			"success": true,
+			"message": "Creating orders",
+		}
+		fmt.Println("HASSAN")
+		json.NewEncoder(response).Encode(defaultJSON)
+		return
+	
 	
 	
 }

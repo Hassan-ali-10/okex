@@ -21,6 +21,7 @@ var mongoOnce sync.Once
 func GetMongoClient() (*mongo.Client, error){
     //Perform connection creation operation only once.
     mongoOnce.Do(func() {
+        fmt.Println("first connection")
         // Set client options
         fmt.Println(config.CONNECTIONSTRING)
         clientOptions := options.Client().ApplyURI(config.CONNECTIONSTRING)
@@ -36,7 +37,7 @@ func GetMongoClient() (*mongo.Client, error){
         }
         clientInstance = client
     })
-    fmt.Println("sagfjkagjkasg")
+    fmt.Println("re-using")
     return clientInstance, clientInstanceError
 }
 func GetMongoDbCollection(CollectionName string) (*mongo.Collection, error) {
@@ -46,7 +47,7 @@ func GetMongoDbCollection(CollectionName string) (*mongo.Collection, error) {
         return nil, err
     }
 
-    collection := client.Database(config.HOMEDB).Collection(CollectionName)
-
+    //collection := client.Database(config.HOMEDB).Collection(CollectionName)
+     collection := client.Database(config.DBNAME).Collection(CollectionName)
     return collection, nil
 }
