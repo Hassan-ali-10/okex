@@ -11,8 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	 connectionhelper "okex/db"
 	 //config "okex/config"
-	 //constants "okex/constants"
+	 constants "okex/constants"
 	 helpers "okex/common"
+	 "go.mongodb.org/mongo-driver/mongo/options"
 	//"io/ioutil"
 	"sync"
 )
@@ -26,11 +27,14 @@ var (
 func Home(response http.ResponseWriter, request *http.Request) {
 response.Header().Set("content-type", "application/json")
 //Perform Find operation & validate against the error.
-collectionName:="employees2" // for office	
+collectionName:="MarketPrices" // for office	
 	//collectionName:="hssn1sss"  // for home
 	//Define filter query for fetching specific document from collection
 	filter := bson.D{{}} //bson.D{{}} specifies 'all documents'
 	var results []bson.M
+	findOpts := options.Find()
+	findOpts.SetLimit(1)
+	findOpts.SetSort(bson.M{"_id": -1})
 	//Get MongoDB collection using connectionhelper.
 	collection, err := connectionhelper.GetMongoDbCollection(collectionName)
 	if err != nil {
@@ -42,7 +46,7 @@ collectionName:="employees2" // for office
 		return
 	}
 
-	cur, findError := collection.Find(context.TODO(), filter)
+	cur, findError := collection.Find(context.TODO(), filter,findOpts)
 	if findError != nil {
 			defaultJSON := bson.M{
 			"success": false,
@@ -56,7 +60,7 @@ collectionName:="employees2" // for office
 	// once exhausted, close the cursor  it will free mongodb server resource ...
 	cur.Close(context.TODO())
 	// return response
-	// fmt.Println(results)
+	 fmt.Println(results)
 	if len(results) == 0 {
 	    defaultJSON := bson.M{
 			"success": true,
@@ -83,9 +87,10 @@ func ExecuteOrdersPostRequest(response http.ResponseWriter, request *http.Reques
 	// 	json.NewEncoder(response).Encode(result)
 	// 	return;
  //    }
-    
+    OrderMode:= constants.GLOBALMODE
 	response.Header().Set("content-type", "application/json")
 	var wg sync.WaitGroup
+	var orderpickType string
 	orders := make(chan bool)
 	
 	 // Declare a unbuffered channel
@@ -93,7 +98,39 @@ func ExecuteOrdersPostRequest(response http.ResponseWriter, request *http.Reques
 	var payload map[string]interface{}
 	//Decode Incoming Payload By Mapping it on payload i.e. Struct Instance in Models
 	_ = json.NewDecoder(request.Body).Decode(&payload)
-	go helpers.PickParentsAndMakeChilds(payload, orders,&wg)
+	fmt.Println(payload)
+	liveTradingBool := payload["enable_buy_barrier_percentile"]
+ 	testTradingBool := payload["enable_test_buy_barrier_percentile"]
+	switch {
+    case OrderMode == "live":
+    	if liveTradingBool == true {
+    		orderpickType = "live"
+    	} else {
+    		orderpickType = ""
+    	}
+    	
+        
+
+    case OrderMode == "test":
+        if liveTradingBool == true {
+    		orderpickType = "test"
+    	} else {
+    		orderpickType = ""
+    	}
+    case OrderMode == "both":
+        if liveTradingBool == true && testTradingBool == true {
+        	orderpickType="both"
+        } else if liveTradingBool == true && testTradingBool == false { 
+        	orderpickType = "live"
+        } else if liveTradingBool == false && testTradingBool == true { 
+        	orderpickType = "test"
+        } else {
+        	orderpickType = ""
+        }
+     default:
+          orderpickType = ""
+    }
+	go helpers.PickParentsAndMakeChilds(payload,orderpickType,orders,&wg)
 	go func() {
 		fmt.Println("channel is closed")
 		wg.Wait()	// this blocks the goroutine until WaitGroup counter is zero
@@ -103,7 +140,7 @@ func ExecuteOrdersPostRequest(response http.ResponseWriter, request *http.Reques
 			"success": true,
 			"message": "Creating orders",
 		}
-		fmt.Println("HASSAN")
+		//fmt.Println("HASSAN")
 		json.NewEncoder(response).Encode(defaultJSON)
 		return
 	

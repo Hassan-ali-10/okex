@@ -6,15 +6,15 @@ import (
 	//"log"
 	 //"fmt"
      "github.com/robfig/cron"
-	 buy_controllers "okex/crons/methods/buy"
+	 //buy_controllers "okex/crons/methods/buy"
 	
 )
 
 func AllCrons() {
 	 c := cron.New()
     
-     c.AddFunc("*/2 * * * * *", buy_controllers.MyFunc)
-     c.AddFunc("0 */1 * * * *", buy_controllers.MyFunc3)
+     //c.AddFunc("*/2 * * * * *", buy_controllers.MyFunc)
+     //c.AddFunc("0 */1 * * * *", buy_controllers.MyFunc3)
 
     // c.AddFunc("@every 3m", buy_controllers.MyFunc)
     // c.AddFunc("@every 2m", buy_controllers.MyFunc3)
